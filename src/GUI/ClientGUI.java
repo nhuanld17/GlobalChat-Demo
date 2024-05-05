@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import javax.swing.JButton;
@@ -15,6 +17,11 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
+
+import DAO.HistoryDAO;
+import javax.swing.JScrollPane;
+import java.awt.Font;
+import java.awt.SystemColor;
 
 public class ClientGUI extends JFrame implements ActionListener {
 
@@ -28,6 +35,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 	private JTextArea textArea;
 	private JButton btnNewButton;
 	private JTextArea messageDisplayArea;
+	private JScrollPane scrollPane_1;
 
 	/**
 	 * Launch the application.
@@ -39,7 +47,9 @@ public class ClientGUI extends JFrame implements ActionListener {
 	 * @throws UnknownHostException 
 	 */
 	public ClientGUI(String username) throws UnknownHostException, IOException {
+		
 		this.username = username;
+		setTitle(username);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 502, 363);
 		contentPane = new JPanel();
@@ -54,17 +64,29 @@ public class ClientGUI extends JFrame implements ActionListener {
 		panel.setLayout(null);
 		
 		messageDisplayArea = new JTextArea();
+		messageDisplayArea.setEditable(false);
+		messageDisplayArea.setForeground(SystemColor.desktop);
+		messageDisplayArea.setFont(new Font("Segoe UI", Font.PLAIN, 15));
 		messageDisplayArea.setBounds(10, 11, 466, 222);
-		panel.add(messageDisplayArea);
+//		panel.add(messageDisplayArea);
 		
 		textArea = new JTextArea();
+		textArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 		textArea.setBounds(10, 246, 372, 67);
-		panel.add(textArea);
+//		panel.add(textArea);
 		
 		btnNewButton = new JButton("SEND");
 		btnNewButton.addActionListener(this);
 		btnNewButton.setBounds(392, 244, 84, 29);
 		panel.add(btnNewButton);
+		
+		JScrollPane scrollPane = new JScrollPane(messageDisplayArea);
+		scrollPane.setBounds(10, 11, 466, 222);
+		panel.add(scrollPane);
+		
+		scrollPane_1 = new JScrollPane(textArea);
+		scrollPane_1.setBounds(10, 246, 372, 67);
+		panel.add(scrollPane_1);
 		
 		socket = new Socket("localhost", 8088);
 		reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -72,11 +94,16 @@ public class ClientGUI extends JFrame implements ActionListener {
 		
 		new Thread(() -> {
 			while (true) {
+				Timestamp time;
+				String userName;
 				String message;
 				try {
+					time = Timestamp.valueOf(reader.readLine());
+					userName = reader.readLine();
 					message = reader.readLine();
 					if (message != null) {
-						messageDisplayArea.append(message + "\n");
+						messageDisplayArea.append(time + "\n"
+								+ userName +": "+message+"\n\n");
 					}
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -86,6 +113,15 @@ public class ClientGUI extends JFrame implements ActionListener {
 		}).start();
 		
 		writer.println(username);
+		
+		loadMessage();
+	}
+
+	private void loadMessage() {
+		ArrayList<String> messages = new HistoryDAO().getMessage();
+		for (String string : messages) {
+			messageDisplayArea.append(string+"\n\n");
+		}
 	}
 
 	@Override
@@ -93,9 +129,14 @@ public class ClientGUI extends JFrame implements ActionListener {
 		if (e.getSource() == btnNewButton) {
 			String message = textArea.getText();
 			if (!message.isEmpty()) {
+				Timestamp time = new Timestamp(System.currentTimeMillis());
+				writer.println(time);
 				writer.println(message);
 				textArea.setText("");
-				messageDisplayArea.append("Me: "+message +"\n");
+
+//				messageDisplayArea.append(username+":"+"("+time+"):"+message +"\n");
+				messageDisplayArea.append(time+"\n"
+						+ username + ": "+message+"\n\n");
 			}
 		}
 	}

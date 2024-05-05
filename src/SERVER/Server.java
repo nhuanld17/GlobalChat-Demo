@@ -1,11 +1,13 @@
 package SERVER;
 
 import java.io.BufferedReader;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Timestamp;
 import java.util.HashMap;
 
 public class Server {
@@ -31,10 +33,10 @@ public class Server {
 		}
 	}
 	
-	public static void broadCast(String message, ClientHandler sender) {
+	public static void broadCast(Timestamp time, String message, String usename, ClientHandler sender) {
 		clients.forEach((key, value) ->{
 			if(value != sender) {
-				value.sendMessage(message);
+				value.sendMessage(message, time, usename);
 			}
 		});
 	}
@@ -44,47 +46,3 @@ public class Server {
 	}
 }
 
-class ClientHandler extends Thread{
-	private BufferedReader reader;
-	private PrintWriter writer;
-	private HashMap<String, ClientHandler> clients;
-	private String usename;
-	
-	public ClientHandler(String username, BufferedReader reader, PrintWriter writer, HashMap<String, ClientHandler> clients) {
-		this.usename = username;
-		this.reader = reader;
-		this.writer = writer;
-		this.clients = clients;
-		clients.put(username, this);
-		start();
-	}
-	
-	public void sendMessage(String message) {
-		writer.println(message);
-	}
-
-	@Override
-	public void run() {
-	    try {
-	        while (true) {
-	            String message = reader.readLine();
-	            if (message == null) {
-	                throw new IOException("Client disconnected");
-	            }
-	            System.out.println(usename + ": " + message);
-	            Server.broadCast(usename + ": " + message, this); // Phát tin nhắn tới các client khác
-	        }
-	    } catch (IOException e) {
-	        System.out.println("Error handling client " + usename);
-	        e.printStackTrace();
-	    } finally {
-	        clients.remove(usename);
-	        try {
-	            reader.close();
-	            writer.close();
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	        }
-	    }
-	}
-}

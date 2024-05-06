@@ -9,19 +9,29 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 
 import DAO.HistoryDAO;
 import javax.swing.JScrollPane;
 import java.awt.Font;
 import java.awt.SystemColor;
+import javax.swing.JLabel;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import java.awt.FlowLayout;
+import javax.swing.ImageIcon;
 
 public class ClientGUI extends JFrame implements ActionListener {
 
@@ -36,6 +46,9 @@ public class ClientGUI extends JFrame implements ActionListener {
 	private JButton btnNewButton;
 	private JTextArea messageDisplayArea;
 	private JScrollPane scrollPane_1;
+	private JPanel panel_Online;
+	private JScrollPane scrollPane_ONLINE;
+	private JPanel PANEL_ONLINE;
 
 	/**
 	 * Launch the application.
@@ -43,84 +56,151 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 	/**
 	 * Create the frame.
-	 * @throws IOException 
-	 * @throws UnknownHostException 
+	 * 
+	 * @throws IOException
+	 * @throws UnknownHostException
 	 */
 	public ClientGUI(String username) throws UnknownHostException, IOException {
-		
+
 		this.username = username;
 		setTitle(username);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 502, 363);
+		setBounds(100, 100, 682, 363);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
-		
+
 		JPanel panel = new JPanel();
-		panel.setBounds(0, 0, 486, 324);
+		panel.setBounds(0, 0, 481, 324);
 		contentPane.add(panel);
 		panel.setLayout(null);
-		
+
 		messageDisplayArea = new JTextArea();
 		messageDisplayArea.setEditable(false);
 		messageDisplayArea.setForeground(SystemColor.desktop);
 		messageDisplayArea.setFont(new Font("Segoe UI", Font.PLAIN, 15));
 		messageDisplayArea.setBounds(10, 11, 466, 222);
-//		panel.add(messageDisplayArea);
-		
+
 		textArea = new JTextArea();
 		textArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 		textArea.setBounds(10, 246, 372, 67);
-//		panel.add(textArea);
-		
+
 		btnNewButton = new JButton("SEND");
 		btnNewButton.addActionListener(this);
 		btnNewButton.setBounds(392, 244, 84, 29);
 		panel.add(btnNewButton);
-		
+
 		JScrollPane scrollPane = new JScrollPane(messageDisplayArea);
 		scrollPane.setBounds(10, 11, 466, 222);
 		panel.add(scrollPane);
-		
+
 		scrollPane_1 = new JScrollPane(textArea);
 		scrollPane_1.setBounds(10, 246, 372, 67);
 		panel.add(scrollPane_1);
+
+//		panel_Online = new JPanel();
+//		panel_Online.setLayout(new BoxLayout(panel_Online, BoxLayout.Y_AXIS));
+//		panel_Online.setBorder(new TitledBorder("Đang Online"));
+//		panel_Online.setBounds(486, 44, 180, 280);
+//		panel.add(panel_Online);
+
+
+//		for (int i = 0; i < 5; i++) {
+//			JLabel testLabel = new JLabel("Test " + i);
+//			panel_Online.add(testLabel);
+//		}
+
+		JPanel panel_2 = new JPanel();
+		panel_2.setBounds(486, 0, 180, 44);
+		contentPane.add(panel_2);
+		panel_2.setLayout(null);
+
+		JLabel lblNewLabel = new JLabel("ĐANG ONLINE");
+		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		lblNewLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		lblNewLabel.setBounds(0, 11, 180, 22);
+		panel_2.add(lblNewLabel);
 		
+
+		
+		PANEL_ONLINE = new JPanel();
+//		PANEL_ONLINE.setLayout(new BoxLayout(panel_Online, BoxLayout.Y_AXIS));
+		PANEL_ONLINE.setBounds(486, 50, 180, 274);
+		
+		scrollPane_ONLINE = new JScrollPane(PANEL_ONLINE);
+		PANEL_ONLINE.setLayout(null);
+		
+//		JLabel lblNewLabel_1 = new JLabel("New label");
+//		lblNewLabel_1.setIcon(new ImageIcon("F:\\eclipse-workspace\\DACS\\src\\image\\icons8-dot-20.png"));
+//		lblNewLabel_1.setBounds(4, 11, 178, 25);
+//		PANEL_ONLINE.add(lblNewLabel_1);
+		scrollPane_ONLINE.setBounds(486, 50, 180, 274);
+		contentPane.add(scrollPane_ONLINE);
+
 		socket = new Socket("localhost", 8088);
 		reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		writer = new PrintWriter(socket.getOutputStream(), true);
-		
+
 		new Thread(() -> {
 			while (true) {
-				Timestamp time;
-				String userName;
-				String message;
 				try {
-					time = Timestamp.valueOf(reader.readLine());
-					userName = reader.readLine();
-					message = reader.readLine();
+					String message = reader.readLine();
+
 					if (message != null) {
-						messageDisplayArea.append(time + "\n"
-								+ userName +": "+message+"\n\n");
+						if (message.startsWith("ONLINE_USERS:")) {
+							System.out.println(message);
+							SwingUtilities.invokeLater(new Runnable() {
+                                public void run() {
+        							updateOnlinePanel(message.substring(13));
+                                }
+                            });
+
+						} else {
+							String dateString = reader.readLine();
+							SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+							Date parsedDate = dateFormat.parse(dateString);
+							Timestamp time = new Timestamp(parsedDate.getTime());
+
+							String userName = reader.readLine();
+							messageDisplayArea.append(time + "\n" + userName + ": " + message + "\n\n");
+						}
 					}
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
+				} catch (ParseException e) {
+					e.printStackTrace();
+					System.out.println("Error parsing date.");
 				}
 			}
 		}).start();
-		
 		writer.println(username);
-		
 		loadMessage();
+	}
+
+	public void updateOnlinePanel(String users) {
+		System.out.println("Updating online panel with users: " + users); // In ra console để debug
+		PANEL_ONLINE.removeAll();
+		String[] userList = users.split(",");
+		int x = 4, y = 11, width = 178, height = 25;
+		for (String user : userList) {
+			JLabel userLabel = new JLabel(user);
+			userLabel.setIcon(new ImageIcon("F:\\eclipse-workspace\\DACS\\src\\image\\icons8-dot-20.png"));
+			userLabel.setBounds(x, y, width, height);
+			userLabel.setHorizontalAlignment(SwingConstants.LEFT);
+			PANEL_ONLINE.add(userLabel);
+			y = y + height + 10;
+			System.out.println("Added user: " + user); // In ra từng user được thêm vào
+		}
+		PANEL_ONLINE.revalidate();
+		PANEL_ONLINE.repaint();
 	}
 
 	private void loadMessage() {
 		ArrayList<String> messages = new HistoryDAO().getMessage();
 		for (String string : messages) {
-			messageDisplayArea.append(string+"\n\n");
+			messageDisplayArea.append(string + "\n\n");
 		}
 	}
 
@@ -133,10 +213,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 				writer.println(time);
 				writer.println(message);
 				textArea.setText("");
-
-//				messageDisplayArea.append(username+":"+"("+time+"):"+message +"\n");
-				messageDisplayArea.append(time+"\n"
-						+ username + ": "+message+"\n\n");
+				messageDisplayArea.append(time + "\n" + username + ": " + message + "\n\n");
 			}
 		}
 	}

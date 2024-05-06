@@ -24,14 +24,15 @@ public class ClientHandler extends Thread{
 	}
 	
 	public void sendMessage(String message, Timestamp time, String usename2) {
+		writer.println(message);
 		writer.println(time);
 		writer.println(usename2);
-		writer.println(message);
 	}
 
 	@Override
 	public void run() {
 	    try {
+	    	Server.updateUserList();
 	        while (true) {
 	        	Timestamp time = Timestamp.valueOf(reader.readLine());
 	            String message = reader.readLine();
@@ -50,6 +51,7 @@ public class ClientHandler extends Thread{
 	        e.printStackTrace();
 	    } finally {
 	        clients.remove(usename);
+	        Server.updateUserList();
 	        try {
 	            reader.close();
 	            writer.close();
@@ -57,6 +59,10 @@ public class ClientHandler extends Thread{
 	            e.printStackTrace();
 	        }
 	    }
+	}
+
+	public void sendOnlineList(String onlineUser) {
+		writer.println("ONLINE_USERS:"+onlineUser);
 	}
 }
 

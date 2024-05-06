@@ -9,6 +9,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.stream.Collectors;
 
 public class Server {
 	private static HashMap<String, ClientHandler> clients = new HashMap<>();
@@ -39,6 +41,17 @@ public class Server {
 				value.sendMessage(message, time, usename);
 			}
 		});
+	}
+	
+	public static void sendOnlineUsers() {
+		String onlineUser = clients.keySet().stream().collect(Collectors.joining(","));
+		for (ClientHandler client : clients.values()) {
+			client.sendOnlineList(onlineUser);
+		}
+	}
+	
+	public static void updateUserList() {
+		sendOnlineUsers();
 	}
 	
 	public static void main(String[] args) throws IOException {

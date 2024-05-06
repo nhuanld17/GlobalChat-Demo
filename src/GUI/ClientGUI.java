@@ -1,5 +1,7 @@
 package GUI;
 
+import java.awt.Font;
+import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -15,23 +17,18 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
 
-import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
-
-import DAO.HistoryDAO;
-import javax.swing.JScrollPane;
-import java.awt.Font;
-import java.awt.SystemColor;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import java.awt.FlowLayout;
-import javax.swing.ImageIcon;
+import javax.swing.border.EmptyBorder;
+
+import DAO.HistoryDAO;
 
 public class ClientGUI extends JFrame implements ActionListener {
 
@@ -60,10 +57,12 @@ public class ClientGUI extends JFrame implements ActionListener {
 	 * @throws IOException
 	 * @throws UnknownHostException
 	 */
-	public ClientGUI(String username) throws UnknownHostException, IOException {
-
+	public ClientGUI(String username, Socket socket, BufferedReader reader, PrintWriter writer) throws UnknownHostException, IOException {
+		this.socket = socket;
+		this.reader = reader;
+		this.writer = writer;
 		this.username = username;
-		setTitle(username);
+		setTitle(this.username);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 682, 363);
 		contentPane = new JPanel();
@@ -100,18 +99,6 @@ public class ClientGUI extends JFrame implements ActionListener {
 		scrollPane_1.setBounds(10, 246, 372, 67);
 		panel.add(scrollPane_1);
 
-//		panel_Online = new JPanel();
-//		panel_Online.setLayout(new BoxLayout(panel_Online, BoxLayout.Y_AXIS));
-//		panel_Online.setBorder(new TitledBorder("Đang Online"));
-//		panel_Online.setBounds(486, 44, 180, 280);
-//		panel.add(panel_Online);
-
-
-//		for (int i = 0; i < 5; i++) {
-//			JLabel testLabel = new JLabel("Test " + i);
-//			panel_Online.add(testLabel);
-//		}
-
 		JPanel panel_2 = new JPanel();
 		panel_2.setBounds(486, 0, 180, 44);
 		contentPane.add(panel_2);
@@ -126,27 +113,19 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 		
 		PANEL_ONLINE = new JPanel();
-//		PANEL_ONLINE.setLayout(new BoxLayout(panel_Online, BoxLayout.Y_AXIS));
 		PANEL_ONLINE.setBounds(486, 50, 180, 274);
 		
 		scrollPane_ONLINE = new JScrollPane(PANEL_ONLINE);
 		PANEL_ONLINE.setLayout(null);
-		
-//		JLabel lblNewLabel_1 = new JLabel("New label");
-//		lblNewLabel_1.setIcon(new ImageIcon("F:\\eclipse-workspace\\DACS\\src\\image\\icons8-dot-20.png"));
-//		lblNewLabel_1.setBounds(4, 11, 178, 25);
-//		PANEL_ONLINE.add(lblNewLabel_1);
 		scrollPane_ONLINE.setBounds(486, 50, 180, 274);
 		contentPane.add(scrollPane_ONLINE);
 
-		socket = new Socket("localhost", 8088);
-		reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		writer = new PrintWriter(socket.getOutputStream(), true);
 
+		this.writer.println(this.username);
 		new Thread(() -> {
 			while (true) {
 				try {
-					String message = reader.readLine();
+					String message = this.reader.readLine();
 
 					if (message != null) {
 						if (message.startsWith("ONLINE_USERS:")) {
@@ -175,7 +154,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 				}
 			}
 		}).start();
-		writer.println(username);
+
 		loadMessage();
 	}
 

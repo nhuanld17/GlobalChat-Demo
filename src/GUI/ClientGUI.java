@@ -121,7 +121,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 		contentPane.add(scrollPane_ONLINE);
 
 
-		this.writer.println(this.username);
+//		this.writer.println(this.username);
 		new Thread(() -> {
 			while (true) {
 				try {

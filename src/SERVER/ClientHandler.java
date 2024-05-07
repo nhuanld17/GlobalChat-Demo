@@ -32,7 +32,7 @@ public class ClientHandler extends Thread{
 	@Override
 	public void run() {
 	    try {
-	    	this.usename = reader.readLine();
+//	    	this.usename = reader.readLine();
 	    	Server.updateUserList();
 	        while (true) {
 	        	Timestamp time = Timestamp.valueOf(reader.readLine());

@@ -26,8 +26,9 @@ public class Server {
 				
 				String userName = reader.readLine();
 				System.out.println("Server nhận được "+ userName);
-				if (isDuplicateLogin(userName)) {
+				if (isDuplicateLogin(userName) == true) {
 					writer.println("DUPLICATE_LOGIN");
+					socket.close();
 					continue;
 				}else {
 					writer.println("OKE");
@@ -72,4 +73,3 @@ public class Server {
 		new Server();
 	}
 }
-

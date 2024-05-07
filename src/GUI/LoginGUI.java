@@ -83,28 +83,42 @@ public class LoginGUI extends JFrame implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		
-		try {
-			socket = new Socket("localhost", 8088);
-			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			writer = new PrintWriter(socket.getOutputStream(), true);
-		} catch (IOException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
+//		try {
+//			socket = new Socket("localhost", 8088);
+//			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//			writer = new PrintWriter(socket.getOutputStream(), true);
+//		} catch (IOException e2) {
+//			// TODO Auto-generated catch block
+//			e2.printStackTrace();
+//		}
 		
 		String username = textField.getText();
 		String password = passwordField.getText();
-		writer.println(username);
-		new Thread(() -> {
-			String message;
-			if (new AccountDao().isValidAccount(username, password)) {
+		
+		if (new AccountDao().isValidAccount(username, password)) {
+			
+			try {
+				socket = new Socket("localhost", 8088);
+				reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				writer = new PrintWriter(socket.getOutputStream(), true);
+
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+
+			
+			new Thread(() -> {
+				writer.println(username);
+				
+				String message;
 				try {
 					message = reader.readLine();
 					if (message != null && message.equals("DUPLICATE_LOGIN")) {
 						System.out.println(message);
-						JOptionPane.showMessageDialog(null, "TK này đã được đăng nhập");
-//						return;
-					}else if(message != null && message.equals("OKE")) {
+						JOptionPane.showMessageDialog(null, "TK đã được login");
+						return;
+					}else if (message != null && message.equals("OKE")) {
 						System.out.println(message);
 						new ClientGUI(username, socket, reader, writer).setVisible(true);
 						setVisible(false);
@@ -113,7 +127,36 @@ public class LoginGUI extends JFrame implements ActionListener {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-			}
-		}).start();
+				
+			}).start();
+		}else {
+			JOptionPane.showMessageDialog(null, "FAILED");
+		}
+		
+//		new Thread(() -> {
+//
+//			String message;
+//			if (new AccountDao().isValidAccount(username, password)) {
+//				writer.println(username);
+//				try {
+//					message = reader.readLine();
+//					if (message != null && message.equals("DUPLICATE_LOGIN")) {
+//						System.out.println(message);
+//						JOptionPane.showMessageDialog(null, "TK này đã được đăng nhập");
+//						return;
+//					}else if(message != null && message.equals("OKE")) {
+//						System.out.println(message);
+//						new ClientGUI(username, socket, reader, writer).setVisible(true);
+//						setVisible(false);
+//					}
+//				} catch (IOException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
+//			}else {
+//				JOptionPane.showMessageDialog(null, "Failed");
+//				return;
+//			}
+//		}).start();
 	}
 }

@@ -17,6 +17,7 @@ public class ClientHandler extends Thread{
 	public ClientHandler(String username, BufferedReader reader, PrintWriter writer, HashMap<String, ClientHandler> clients) {
 		this.usename = username;
 		this.reader = reader;
+		System.out.println(username+" hea");
 		this.writer = writer;
 		this.clients = clients;
 		clients.put(username, this);
@@ -66,4 +67,3 @@ public class ClientHandler extends Thread{
 		writer.println("ONLINE_USERS:"+onlineUser);
 	}
 }
-
